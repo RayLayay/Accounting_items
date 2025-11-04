@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务报告与分析 - 智能记账客户端</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+        
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .chart-container {
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        
+        .report-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .report-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .report-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .report-meta {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .report-type {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .report-type.monthly {
+            background: #e7f3ff;
+            color: #007bff;
+        }
+        
+        .report-type.yearly {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stat-income {
+            color: #28a745;
+        }
+        
+        .stat-expense {
+            color: #dc3545;
+        }
+        
+        .stat-balance {
+            color: #007bff;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .report-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .navbar-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .navbar-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部 -->
+    <div class="header">
+        <div class="header-title">💰 智能记账客户端</div>
+        <div class="user-info">
+            <span>欢迎，{{ session.username }}</span>
+            <a href="/" class="btn btn-outline">🏠 返回首页</a>
+            <a href="/reports" class="btn btn-outline">📊 报告分析</a>
+            <a href="/logout" class="btn btn-primary">🚪 退出登录</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 报告生成 -->
+        <div class="section">
+            <h2 class="section-title">财务报告生成</h2>
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('generate-tab')">生成报告</button>
+                <button class="tab" onclick="switchTab('reports-tab')">历史报告</button>
+                <button class="tab" onclick="switchTab('analysis-tab')">数据分析</button>
+            </div>
+            
+            <div id="generate-tab" class="tab-content active">
+                <div class="form-group">
+                    <label>报告类型</label>
+                    <select class="form-control" id="report-type">
+                        <option value="monthly">月度报告</option>
+                        <option value="yearly">年度报告</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="monthly-fields">
+                    <label>选择月份</label>
+                    <input type="month" class="form-control" id="report-month" value="{{ current_month }}">
+                </div>
+                
+                <div class="form-group" id="yearly-fields" style="display: none;">
+                    <label>选择年份</label>
+                    <input type="number" class="form-control" id="report-year" value="{{ current_year }}" min="2020" max="2030">
+                </div>
+                
+                <button class="btn btn-primary" onclick="generateReport()">生成报告</button>
+                
+                <div id="report-result"></div>
+            </div>
+            
+            <div id="reports-tab" class="tab-content">
+                <div class="loading" id="reports-loading">加载中...</div>
+                <div class="report-list" id="reports-list" style="display: none;"></div>
+            </div>
+            
+            <div id="analysis-tab" class="tab-content">
+                <div class="form-group">
+                    <label>分析类型</label>
+                    <select class="form-control" id="analysis-type">
+                        <option value="time-range">时间范围分析</option>
+                        <option value="category">分类分析</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>开始日期</label>
+                    <input type="date" class="form-control" id="start-date">
+                </div>
+                
+                <div class="form-group">
+                    <label>结束日期</label>
+                    <input type="date" class="form-control" id="end-date">
+                </div>
+                
+                <button class="btn btn-success" onclick="performAnalysis()">开始分析</button>
+                
+                <div id="analysis-result"></div>
+            </div>
+        </div>
+        
+        <!-- 报告详情 -->
+        <div class="section" id="report-detail" style="display: none;">
+            <h2 class="section-title" id="report-detail-title">报告详情</h2>
+            <div id="report-detail-content"></div>
+        </div>
+        
+        <!-- 分析结果 -->
+        <div class="section" id="analysis-results" style="display: none;">
+            <h2 class="section-title" id="analysis-results-title">分析结果</h2>
+            <div id="analysis-results-content"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentReport = null;
+        let currentAnalysis = null;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadReports();
+            setDefaultDates();
+            
+            // 报告类型变化
+            document.getElementById('report-type').addEventListener('change', function() {
+                const type = this.value;
+                document.getElementById('monthly-fields').style.display = type === 'monthly' ? 'block' : 'none';
+                document.getElementById('yearly-fields').style.display = type === 'yearly' ? 'block' : 'none';
+            });
+        });
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        function setDefaultDates() {
+            const now = new Date();
+            const currentMonth = now.toISOString().slice(0, 7);
+            const currentYear = now.getFullYear();
+            
+            document.getElementById('report-month').value = currentMonth;
+            document.getElementById('report-year').value = currentYear;
+            
+            // 设置默认分析日期为最近30天
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+            
+            document.getElementById('start-date').value = startDate.toISOString().slice(0, 10);
+            document.getElementById('end-date').value = endDate.toISOString().slice(0, 10);
+        }
+        
+        function generateReport() {
+            const reportType = document.getElementById('report-type').value;
+            const resultDiv = document.getElementById('report-result');
+            resultDiv.innerHTML = '<div class="loading">正在生成报告...</div>';
+            
+            let url, data;
+            
+            if (reportType === 'monthly') {
+                const month = document.getElementById('report-month').value;
+                const [year, monthNum] = month.split('-');
+                url = '/api/reports/monthly';
+                data = { year: parseInt(year), month: parseInt(monthNum) };
+            } else {
+                const year = parseInt(document.getElementById('report-year').value);
+                url = '/api/reports/yearly';
+                data = { year: year };
+            }
+            
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    resultDiv.innerHTML = `<div class="success">${result.message}</div>`;
+                    currentReport = result.report;
+                    displayReportDetail(result.report, reportType);
+                    loadReports(); // 刷新报告列表
+                } else {
+                    resultDiv.innerHTML = `<div class="error">${result.message}</div>`;
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `<div class="error">生成报告失败: ${error.message}</div>`;
+            });
+        }
+        
+        function loadReports() {
+            const loading = document.getElementById('reports-loading');
+            const list = document.getElementById('reports-list');
+            
+            fetch('/api/reports')
+                .then(response => response.json())
+                .then(reports => {
+                    loading.style.display = 'none';
+                    list.style.display = 'grid';
+                    list.innerHTML = '';
+                    
+                    if (reports.length === 0) {
+                        list.innerHTML = '<div class="loading">暂无报告，请先生成报告</div>';
+                        return;
+                    }
+                    
+                    reports.forEach(report => {
+                        const card = document.createElement('div');
+                        card.className = 'report-card';
+                        card.innerHTML = `
+                            <div class="report-title">${report.title}</div>
+                            <div class="report-meta">
+                                <span class="report-type ${report.report_type}">${report.report_type === 'monthly' ? '月度' : '年度'}</span>
+                                <span>生成时间: ${new Date(report.generated_at).toLocaleString()}</span>
+                            </div>
+                            <button class="btn btn-primary" onclick="viewReport(${report.id})">查看详情</button>
+                        `;
+                        list.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    loading.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
+                });
+        }
+        
+        function viewReport(reportId) {
+            fetch(`/api/reports/${reportId}`)
+                .then(response => response.json())
+                .then(content => {
+                    currentReport = content;
+                    displayReportDetail(content, 'existing');
+                })
+                .catch(error => {
+                    alert('获取报告详情失败: ' + error.message);
+                });
+        }
+        
+        function displayReportDetail(report, type) {
+            const detailSection = document.getElementById('report-detail');
+            const title = document.getElementById('report-detail-title');
+            const content = document.getElementById('report-detail-content');
+            
+            detailSection.style.display = 'block';
+            
+            if (type === 'existing') {
+                title.textContent = '报告详情';
+            } else {
+                title.textContent = type === 'monthly' ? '月度报告详情' : '年度报告详情';
+            }
+            
+            let html = `
+                <div class="analysis-grid">
+                    <div class="stat-card">
+                        <div>总收入</div>
+                        <div class="stat-value stat-income">¥${report.summary.income.toFixed(2)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>总支出</div>
+                        <div class="stat-value stat-expense">¥${report.summary.expense.toFixed(2)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>余额</div>
+                        <div class="stat-value stat-balance">¥${report.summary.balance.toFixed(2)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>记录数量</div>
+                        <div class="stat-value">${report.summary.records_count}</div>
+                    </div>
+                </div>
+            `;
+            
+            // 分类统计
+            if (report.category_stats) {
+                html += '<h3 style="margin: 20px 0 10px 0;">分类统计</h3>';
+                html += '<div class="chart-container" id="category-chart"></div>';
+            }
+            
+            // 月度趋势（年度报告）
+            if (report.monthly_trend) {
+                html += '<h3 style="margin: 20px 0 10px 0;">月度趋势</h3>';
+                html += '<div class="chart-container" id="trend-chart"></div>';
+            }
+            
+            // 大额收支记录
+            if (report.top_expenses && report.top_expenses.length > 0) {
+                html += '<h3 style="margin: 20px 0 10px 0;">大额支出</h3>';
+                html += '<div style="max-height: 300px; overflow-y: auto;">';
+                report.top_expenses.forEach(expense => {
+                    html += `
+                        <div style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
+                            <span>${expense.category} - ${expense.description || '无描述'}</span>
+                            <span style="color: #dc3545;">-¥${expense.amount.toFixed(2)}</span>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            if (report.top_incomes && report.top_incomes.length > 0) {
+                html += '<h3 style="margin: 20px 0 10px 0;">大额收入</h3>';
+                html += '<div style="max-height: 300px; overflow-y: auto;">';
+                report.top_incomes.forEach(income => {
+                    html += `
+                        <div style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
+                            <span>${income.category} - ${income.description || '无描述'}</span>
+                            <span style="color: #28a745;">+¥${income.amount.toFixed(2)}</span>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            content.innerHTML = html;
+            
+            // 渲染图表
+            setTimeout(() => {
+                if (report.category_stats) {
+                    renderCategoryChart(report.category_stats);
+                }
+                if (report.monthly_trend) {
+                    renderTrendChart(report.monthly_trend);
+                }
+            }, 100);
+        }
+        
+        function renderCategoryChart(categoryStats) {
+            const chart = echarts.init(document.getElementById('category-chart'));
+            const categories = Object.keys(categoryStats);
+            const incomeData = categories.map(cat => categoryStats[cat].income);
+            const expenseData = categories.map(cat => categoryStats[cat].expense);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                legend: {
+                    data: ['收入', '支出']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: categories
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: '收入',
+                        type: 'bar',
+                        data: incomeData,
+                        itemStyle: { color: '#28a745' }
+                    },
+                    {
+                        name: '支出',
+                        type: 'bar',
+                        data: expenseData,
+                        itemStyle: { color: '#dc3545' }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+        }
+        
+        function renderTrendChart(monthlyTrend) {
+            const chart = echarts.init(document.getElementById('trend-chart'));
+            const months = monthlyTrend.map(item => item.month);
+            const incomeData = monthlyTrend.map(item => item.income);
+            const expenseData = monthlyTrend.map(item => item.expense);
+            const balanceData = monthlyTrend.map(item => item.balance);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['收入', '支出', '余额']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: months
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: '收入',
+                        type: 'line',
+                        data: incomeData,
+                        itemStyle: { color: '#28a745' },
+                        lineStyle: { color: '#28a745' }
+                    },
+                    {
+                        name: '支出',
+                        type: 'line',
+                        data: expenseData,
+                        itemStyle: { color: '#dc3545' },
+                        lineStyle: { color: '#dc3545' }
+                    },
+                    {
+                        name: '余额',
+                        type: 'line',
+                        data: balanceData,
+                        itemStyle: { color: '#007bff' },
+                        lineStyle: { color: '#007bff' }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+        }
+        
+        function performAnalysis() {
+            const analysisType = document.getElementById('analysis-type').value;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const resultDiv = document.getElementById('analysis-result');
+            
+            if (!startDate || !endDate) {
+                resultDiv.innerHTML = '<div class="error">请选择开始日期和结束日期</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="loading">正在分析数据...</div>';
+            
+            const url = analysisType === 'time-range' ? 
+                `/api/analysis/time-range?start_date=${startDate}&end_date=${endDate}` :
+                `/api/analysis/category?start_date=${startDate}&end_date=${endDate}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        currentAnalysis = result;
+                        displayAnalysisResult(result, analysisType);
+                    } else {
+                        resultDiv.innerHTML = `<div class="error">${result.message}</div>`;
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `<div class="error">分析失败: ${error.message}</div>`;
+                });
+        }
+        
+        function displayAnalysisResult(analysis, type) {
+            const resultsSection = document.getElementById('analysis-results');
+            const title = document.getElementById('analysis-results-title');
+            const content = document.getElementById('analysis-results-content');
+            
+            resultsSection.style.display = 'block';
+            title.textContent = type === 'time-range' ? '时间范围分析结果' : '分类分析结果';
+            
+            let html = `
+                <div class="analysis-grid">
+                    <div class="stat-card">
+                        <div>总收入</div>
+                        <div class="stat-value stat-income">¥${analysis.summary.total_income.toFixed(2)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>总支出</div>
+                        <div class="stat-value stat-expense">¥${analysis.summary.total_expense.toFixed(2)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>余额</div>
+                        <div class="stat-value stat-balance">¥${analysis.summary.balance.toFixed(2)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>记录数量</div>
+                        <div class="stat-value">${analysis.summary.records_count}</div>
+                    </div>
+                </div>
+            `;
+            
+            if (type === 'time-range') {
+                // 时间范围分析
+                if (analysis.daily_data) {
+                    html += '<h3 style="margin: 20px 0 10px 0;">每日收支趋势</h3>';
+                    html += '<div class="chart-container" id="daily-chart"></div>';
+                }
+                
+                if (analysis.category_data) {
+                    html += '<h3 style="margin: 20px 0 10px 0;">分类统计</h3>';
+                    html += '<div class="chart-container" id="analysis-category-chart"></div>';
+                }
+                
+                // 大额记录
+                if (analysis.top_records) {
+                    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">';
+                    
+                    if (analysis.top_records.incomes && analysis.top_records.incomes.length > 0) {
+                        html += '<div>';
+                        html += '<h4>大额收入</h4>';
+                        html += '<div style="max-height: 300px; overflow-y: auto;">';
+                        analysis.top_records.incomes.forEach(income => {
+                            html += `
+                                <div style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
+                                    <span>${income.category} - ${income.description || '无描述'}</span>
+                                    <span style="color: #28a745;">+¥${income.amount.toFixed(2)}</span>
+                                </div>
+                            `;
+                        });
+                        html += '</div></div>';
+                    }
+                    
+                    if (analysis.top_records.expenses && analysis.top_records.expenses.length > 0) {
+                        html += '<div>';
+                        html += '<h4>大额支出</h4>';
+                        html += '<div style="max-height: 300px; overflow-y: auto;">';
+                        analysis.top_records.expenses.forEach(expense => {
+                            html += `
+                                <div style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
+                                    <span>${expense.category} - ${expense.description || '无描述'}</span>
+                                    <span style="color: #dc3545;">-¥${expense.amount.toFixed(2)}</span>
+                                </div>
+                            `;
+                        });
+                        html += '</div></div>';
+                    }
+                    
+                    html += '</div>';
+                }
+            } else {
+                // 分类分析
+                if (analysis.category_stats) {
+                    html += '<h3 style="margin: 20px 0 10px 0;">分类详细统计</h3>';
+                    html += '<div class="chart-container" id="category-analysis-chart"></div>';
+                    
+                    // 分类详情表格
+                    html += '<div style="max-height: 400px; overflow-y: auto; margin-top: 20px;">';
+                    html += '<table style="width: 100%; border-collapse: collapse;">';
+                    html += '<thead><tr><th style="padding: 10px; border: 1px solid #ddd; background: #f8f9fa;">分类</th><th style="padding: 10px; border: 1px solid #ddd; background: #f8f9fa;">收入</th><th style="padding: 10px; border: 1px solid #ddd; background: #f8f9fa;">支出</th><th style="padding: 10px; border: 1px solid #ddd; background: #f8f9fa;">记录数</th></tr></thead>';
+                    html += '<tbody>';
+                    
+                    Object.entries(analysis.category_stats).forEach(([category, stats]) => {
+                        html += `
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid #ddd;">${category}</td>
+                                <td style="padding: 10px; border: 1px solid #ddd; color: #28a745;">¥${stats.income.toFixed(2)}</td>
+                                <td style="padding: 10px; border: 1px solid #ddd; color: #dc3545;">¥${stats.expense.toFixed(2)}</td>
+                                <td style="padding: 10px; border: 1px solid #ddd;">${stats.count}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table></div>';
+                }
+            }
+            
+            content.innerHTML = html;
+            
+            // 渲染图表
+            setTimeout(() => {
+                if (type === 'time-range') {
+                    if (analysis.daily_data) {
+                        renderDailyChart(analysis.daily_data);
+                    }
+                    if (analysis.category_data) {
+                        renderAnalysisCategoryChart(analysis.category_data);
+                    }
+                } else {
+                    if (analysis.category_stats) {
+                        renderCategoryAnalysisChart(analysis.category_stats);
+                    }
+                }
+            }, 100);
+        }
+        
+        function renderDailyChart(dailyData) {
+            const chart = echarts.init(document.getElementById('daily-chart'));
+            const dates = Object.keys(dailyData).sort();
+            const incomeData = dates.map(date => dailyData[date].income);
+            const expenseData = dates.map(date => dailyData[date].expense);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['收入', '支出']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: dates
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: '收入',
+                        type: 'line',
+                        data: incomeData,
+                        itemStyle: { color: '#28a745' },
+                        lineStyle: { color: '#28a745' }
+                    },
+                    {
+                        name: '支出',
+                        type: 'line',
+                        data: expenseData,
+                        itemStyle: { color: '#dc3545' },
+                        lineStyle: { color: '#dc3545' }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+        }
+        
+        function renderAnalysisCategoryChart(categoryData) {
+            const chart = echarts.init(document.getElementById('analysis-category-chart'));
+            const categories = Object.keys(categoryData);
+            const incomeData = categories.map(cat => categoryData[cat].income);
+            const expenseData = categories.map(cat => categoryData[cat].expense);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                legend: {
+                    data: ['收入', '支出']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: categories
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: '收入',
+                        type: 'bar',
+                        data: incomeData,
+                        itemStyle: { color: '#28a745' }
+                    },
+                    {
+                        name: '支出',
+                        type: 'bar',
+                        data: expenseData,
+                        itemStyle: { color: '#dc3545' }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+        }
+        
+        function renderCategoryAnalysisChart(categoryStats) {
+            const chart = echarts.init(document.getElementById('category-analysis-chart'));
+            const categories = Object.keys(categoryStats);
+            const incomeData = categories.map(cat => categoryStats[cat].income);
+            const expenseData = categories.map(cat => categoryStats[cat].expense);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                legend: {
+                    data: ['收入', '支出']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: categories
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: '收入',
+                        type: 'bar',
+                        data: incomeData,
+                        itemStyle: { color: '#28a745' }
+                    },
+                    {
+                        name: '支出',
+                        type: 'bar',
+                        data: expenseData,
+                        itemStyle: { color: '#dc3545' }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+        }
+    </script>
+</body>
+</html>
