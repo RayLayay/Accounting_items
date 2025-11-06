@@ -1,22 +1,19 @@
-# 双端记账系统
+# 智能记账客户端
 
-一个支持Web端和移动端数据互通的个人记账系统，具有多用户登录、数据同步、报告分析等功能。
+一个简洁高效的桌面记账应用，具有完整的财务记录管理、数据分析和可视化功能。
 
 ## 🚀 系统特性
 
 ### 核心功能
-- ✅ **多用户登录系统** - 支持用户注册、登录、会话管理
+- ✅ **用户管理系统** - 注册、登录、会话管理
 - ✅ **财务记录管理** - 收入/支出记录添加、查看、删除
 - ✅ **数据统计分析** - 月度/年度数据汇总、分类分析
-- ✅ **自动报告生成** - 月度报告、年度报告自动生成
-- ✅ **移动端数据同步** - 支持移动端与Web端数据实时同步
 - ✅ **可视化图表展示** - 使用ECharts展示财务数据图表
 - ✅ **实时数据更新** - 自动刷新和实时数据展示
 
 ### 技术特性
-- **前后端分离架构** - Flask后端 + 原生JavaScript前端
-- **RESTful API设计** - 标准化的API接口
-- **SQLite数据库** - 轻量级数据存储
+- **桌面应用** - 基于Flask的桌面客户端
+- **SQLite数据库** - 轻量级本地数据存储
 - **响应式设计** - 支持PC和移动端访问
 - **数据安全** - 密码哈希加密、会话管理
 
@@ -25,15 +22,20 @@
 ```
 Finance/
 ├── backend_api.py          # 后端API服务
-├── web_app.py              # Web应用
+├── simple_desktop_client.py # 桌面客户端主程序
+├── start_client.py         # 启动器脚本
 ├── start_system.py         # 系统启动脚本
-├── README.md               # 项目文档
-├── finance_system.db       # 数据库文件（自动生成）
-└── templates/              # HTML模板
-    ├── login.html          # 登录页面
-    ├── register.html       # 注册页面
-    ├── dashboard.html      # 仪表板页面
-    └── reports.html        # 报告分析页面
+├── build_client.py         # 打包工具
+├── 智能记账客户端.spec      # PyInstaller打包配置
+├── install.bat            # Windows安装脚本
+├── 使用说明.txt            # 用户使用说明
+├── README.md              # 项目文档
+├── finance_system.db      # 数据库文件（自动生成）
+└── templates/             # HTML模板
+    ├── login.html         # 登录页面
+    ├── register.html      # 注册页面
+    ├── dashboard.html     # 仪表板页面
+    └── reports.html       # 报告分析页面
 ```
 
 ## 🛠️ 快速开始
@@ -41,23 +43,21 @@ Finance/
 ### 环境要求
 - Python 3.7+
 - Flask
-- requests
 - sqlite3 (Python内置)
 
 ### 安装依赖
 ```bash
-pip install flask requests
+pip install flask
 ```
 
 ### 启动系统
 ```bash
 cd Finance
-python start_system.py
+python start_client.py
 ```
 
 ### 访问系统
-- **Web端**: http://127.0.0.1:5000
-- **后端API**: http://127.0.0.1:5001
+- **桌面客户端**: http://127.0.0.1:5000
 
 ### 测试账号
 - 用户名: `testuser`
@@ -123,26 +123,12 @@ analysis_data (id, user_id, data_type, period, data_content, created_at)
 - `POST /api/sync` - 数据同步
 - `GET /api/sync/records` - 获取同步记录
 
-## 📱 移动端集成
-
-### 移动端特性
-- React Native应用
-- 离线数据存储
-- 自动数据同步
-- 本地推送通知
-
-### 同步机制
-1. 移动端使用同步令牌认证
-2. 增量数据同步
-3. 冲突检测和解决
-4. 同步状态跟踪
-
 ## 🎯 使用指南
 
 ### 1. 用户注册和登录
-- 访问Web端注册新用户
-- 使用用户名密码登录
-- 系统自动生成同步令牌
+- 启动应用后访问 http://127.0.0.1:5000
+- 注册新用户或使用测试账号登录
+- 系统自动管理用户会话
 
 ### 2. 记录管理
 - 在仪表板添加收入/支出记录
@@ -150,14 +136,9 @@ analysis_data (id, user_id, data_type, period, data_content, created_at)
 - 查看历史记录和统计数据
 
 ### 3. 报告分析
-- 生成月度/年度财务报告
-- 查看分类统计和趋势图表
-- 分析大额收支记录
-
-### 4. 数据同步
-- 移动端使用同步令牌连接
-- 自动同步财务记录
-- 支持多设备数据一致性
+- 查看月度/年度财务报告
+- 分析分类统计和趋势图表
+- 了解收支情况
 
 ## 🔒 安全特性
 

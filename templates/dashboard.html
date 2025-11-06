@@ -411,7 +411,7 @@
             <div class="user-info">
                 <span>欢迎，{{ session.username }}</span>
                 <a href="/reports" class="btn btn-outline">📊 报告分析</a>
-                <a href="/" class="btn btn-outline">🏠 返回首页</a>
+                <a href="/" class="btn btn-outline">🔄 刷新页面</a>
                 <a href="/logout" class="btn btn-primary">🚪 退出登录</a>
             </div>
         </div>
@@ -546,25 +546,49 @@
         
         // 初始化应用
         document.addEventListener('DOMContentLoaded', function() {
-            // 设置默认日期为今天
-            document.getElementById('record-date').value = new Date().toISOString().split('T')[0];
-            
-            loadCategories();
-            loadSummary();
-            loadRecords();
-            loadCharts();
-            startAutoSync();
-            
-            // 表单提交
-            document.getElementById('record-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                addRecord();
-            });
-            
-            // 类型变化时更新分类
-            document.getElementById('record-type').addEventListener('change', function() {
-                updateCategories();
-            });
+            try {
+                // 设置默认日期为今天
+                document.getElementById('record-date').value = new Date().toISOString().split('T')[0];
+                
+                // 添加加载状态
+                document.getElementById('sync-status').textContent = '正在初始化...';
+                
+                // 顺序加载，避免并发请求过多
+                setTimeout(() => {
+                    loadCategories();
+                }, 100);
+                
+                setTimeout(() => {
+                    loadSummary();
+                }, 300);
+                
+                setTimeout(() => {
+                    loadRecords();
+                }, 500);
+                
+                setTimeout(() => {
+                    loadCharts();
+                }, 700);
+                
+                setTimeout(() => {
+                    startAutoSync();
+                }, 1000);
+                
+                // 表单提交
+                document.getElementById('record-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    addRecord();
+                });
+                
+                // 类型变化时更新分类
+                document.getElementById('record-type').addEventListener('change', function() {
+                    updateCategories();
+                });
+                
+            } catch (error) {
+                console.error('初始化失败:', error);
+                showNotification('页面初始化失败，请刷新页面', 'error');
+            }
         });
         
         function switchTab(tabName) {
@@ -673,9 +697,8 @@
         }
         
         function loadCharts() {
+            // 只渲染当前激活的图表，避免同时加载所有图表
             renderMonthlyChart();
-            renderCategoryChart();
-            renderDailyChart();
         }
         
         function renderMonthlyChart() {
@@ -764,65 +787,132 @@
             fetch('/api/records')
                 .then(response => response.json())
                 .then(records => {
-                    // 分类统计
-                    const categoryStats = {};
+                    // 分类统计 - 将收入和支出分开计算
+                    const incomeStats = {};
+                    const expenseStats = {};
+                    
                     records.forEach(record => {
-                        if (!categoryStats[record.category]) {
-                            categoryStats[record.category] = { income: 0, expense: 0 };
-                        }
                         if (record.type === 'income') {
-                            categoryStats[record.category].income += record.amount;
+                            if (!incomeStats[record.category]) {
+                                incomeStats[record.category] = 0;
+                            }
+                            incomeStats[record.category] += record.amount;
                         } else {
-                            categoryStats[record.category].expense += record.amount;
+                            if (!expenseStats[record.category]) {
+                                expenseStats[record.category] = 0;
+                            }
+                            expenseStats[record.category] += record.amount;
                         }
                     });
                     
                     const chart = echarts.init(document.getElementById('category-chart-container'));
-                    const categories = Object.keys(categoryStats);
-                    const incomeData = categories.map(cat => categoryStats[cat].income);
-                    const expenseData = categories.map(cat => categoryStats[cat].expense);
+                    
+                    // 定义颜色数组，为不同分类分配不同颜色
+                    const colorPalette = [
+                        '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
+                        '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#ff9f7f',
+                        '#8378ea', '#96bfff', '#87a885', '#d7504b', '#c6e579',
+                        '#f4e001', '#f0805a', '#26c0c0', '#ff7f50', '#87ceeb'
+                    ];
+                    
+                    // 准备收入饼图数据
+                    const incomeData = Object.entries(incomeStats).map(([category, amount], index) => ({
+                        name: category,
+                        value: amount,
+                        itemStyle: {
+                            color: colorPalette[index % colorPalette.length]
+                        }
+                    }));
+                    
+                    // 准备支出饼图数据
+                    const expenseData = Object.entries(expenseStats).map(([category, amount], index) => ({
+                        name: category,
+                        value: amount,
+                        itemStyle: {
+                            color: colorPalette[index % colorPalette.length]
+                        }
+                    }));
                     
                     const option = {
                         title: { 
-                            text: '分类收支统计', 
+                            text: '分类收支分析', 
                             left: 'center',
                             textStyle: { fontSize: 16, fontWeight: 'bold' }
                         },
                         tooltip: {
-                            trigger: 'axis',
-                            axisPointer: { type: 'shadow' }
+                            trigger: 'item',
+                            formatter: '{a} <br/>{b}: ¥{c} ({d}%)'
                         },
                         legend: {
-                            data: ['收入', '支出']
-                        },
-                        grid: {
-                            left: '3%',
-                            right: '4%',
-                            bottom: '3%',
-                            containLabel: true
-                        },
-                        xAxis: {
-                            type: 'category',
-                            data: categories
-                        },
-                        yAxis: {
-                            type: 'value',
-                            axisLabel: {
-                                formatter: '¥{value}'
+                            orient: 'vertical',
+                            left: 'left',
+                            top: 'middle',
+                            textStyle: {
+                                fontSize: 12
                             }
                         },
                         series: [
                             {
-                                name: '收入',
-                                type: 'bar',
-                                data: incomeData,
-                                itemStyle: { color: '#28a745' }
+                                name: '收入分类',
+                                type: 'pie',
+                                radius: ['25%', '45%'],
+                                center: ['30%', '50%'],
+                                avoidLabelOverlap: true,
+                                itemStyle: {
+                                    borderRadius: 8,
+                                    borderColor: '#fff',
+                                    borderWidth: 2
+                                },
+                                label: {
+                                    show: true,
+                                    formatter: '{b}: {d}%',
+                                    fontSize: 10,
+                                    fontWeight: 'normal'
+                                },
+                                labelLine: {
+                                    show: true,
+                                    length: 10,
+                                    length2: 5
+                                },
+                                emphasis: {
+                                    label: {
+                                        show: true,
+                                        fontSize: 12,
+                                        fontWeight: 'bold'
+                                    }
+                                },
+                                data: incomeData
                             },
                             {
-                                name: '支出',
-                                type: 'bar',
-                                data: expenseData,
-                                itemStyle: { color: '#dc3545' }
+                                name: '支出分类',
+                                type: 'pie',
+                                radius: ['25%', '45%'],
+                                center: ['70%', '50%'],
+                                avoidLabelOverlap: true,
+                                itemStyle: {
+                                    borderRadius: 8,
+                                    borderColor: '#fff',
+                                    borderWidth: 2
+                                },
+                                label: {
+                                    show: true,
+                                    formatter: '{b}: {d}%',
+                                    fontSize: 10,
+                                    fontWeight: 'normal'
+                                },
+                                labelLine: {
+                                    show: true,
+                                    length: 10,
+                                    length2: 5
+                                },
+                                emphasis: {
+                                    label: {
+                                        show: true,
+                                        fontSize: 12,
+                                        fontWeight: 'bold'
+                                    }
+                                },
+                                data: expenseData
                             }
                         ]
                     };
@@ -836,6 +926,8 @@
                 })
                 .catch(error => {
                     console.error('加载分类图表数据失败:', error);
+                    // 显示错误信息
+                    document.getElementById('category-chart-container').innerHTML = '<div class="loading">加载分类图表失败</div>';
                 });
         }
         
@@ -870,20 +962,41 @@
                             textStyle: { fontSize: 16, fontWeight: 'bold' }
                         },
                         tooltip: {
-                            trigger: 'axis'
+                            trigger: 'axis',
+                            formatter: function(params) {
+                                let result = params[0].axisValue + '<br/>';
+                                params.forEach(param => {
+                                    result += `${param.seriesName}: ¥${param.value.toFixed(2)}<br/>`;
+                                });
+                                return result;
+                            }
                         },
                         legend: {
-                            data: ['收入', '支出']
+                            data: ['收入', '支出'],
+                            top: 10
                         },
                         grid: {
                             left: '3%',
                             right: '4%',
-                            bottom: '3%',
+                            top: '15%',
+                            bottom: '10%',
                             containLabel: true
                         },
                         xAxis: {
                             type: 'category',
-                            data: dates
+                            data: dates,
+                            axisLabel: {
+                                interval: 0,
+                                rotate: dates.length > 10 ? 45 : 0,
+                                formatter: function(value) {
+                                    // 如果日期太多，只显示部分日期
+                                    if (dates.length > 15) {
+                                        const date = new Date(value);
+                                        return date.getDate() + '/' + (date.getMonth() + 1);
+                                    }
+                                    return value;
+                                }
+                            }
                         },
                         yAxis: {
                             type: 'value',
@@ -895,16 +1008,40 @@
                             {
                                 name: '收入',
                                 type: 'line',
+                                smooth: true,
                                 data: incomeData,
-                                lineStyle: { color: '#28a745' },
-                                itemStyle: { color: '#28a745' }
+                                lineStyle: { color: '#28a745', width: 3 },
+                                itemStyle: { color: '#28a745' },
+                                areaStyle: {
+                                    color: {
+                                        type: 'linear',
+                                        x: 0, y: 0, x2: 0, y2: 1,
+                                        colorStops: [{
+                                            offset: 0, color: 'rgba(40, 167, 69, 0.3)'
+                                        }, {
+                                            offset: 1, color: 'rgba(40, 167, 69, 0.05)'
+                                        }]
+                                    }
+                                }
                             },
                             {
                                 name: '支出',
                                 type: 'line',
+                                smooth: true,
                                 data: expenseData,
-                                lineStyle: { color: '#dc3545' },
-                                itemStyle: { color: '#dc3545' }
+                                lineStyle: { color: '#dc3545', width: 3 },
+                                itemStyle: { color: '#dc3545' },
+                                areaStyle: {
+                                    color: {
+                                        type: 'linear',
+                                        x: 0, y: 0, x2: 0, y2: 1,
+                                        colorStops: [{
+                                            offset: 0, color: 'rgba(220, 53, 69, 0.3)'
+                                        }, {
+                                            offset: 1, color: 'rgba(220, 53, 69, 0.05)'
+                                        }]
+                                    }
+                                }
                             }
                         ]
                     };
@@ -957,15 +1094,20 @@
         
         function quickRecord(type, category, amount) {
             document.getElementById('record-type').value = type;
-            updateCategories();
-            document.getElementById('category').value = category;
             document.getElementById('amount').value = amount;
             document.getElementById('description').value = `快速记录 - ${category}`;
             
-            // 自动提交
+            // 等待分类更新完成后再设置分类值
             setTimeout(() => {
-                addRecord();
-            }, 100);
+                updateCategories();
+                setTimeout(() => {
+                    document.getElementById('category').value = category;
+                    // 自动提交
+                    setTimeout(() => {
+                        addRecord();
+                    }, 100);
+                }, 50);
+            }, 50);
         }
         
         function deleteRecord(recordId) {
@@ -1020,6 +1162,9 @@
         function startAutoSync() {
             // 页面加载时立即同步
             setTimeout(triggerSync, 1000);
+            
+            // 移除自动同步循环，避免重复请求导致页面卡顿
+            // 只在用户操作时触发同步
         }
     </script>
 </body>

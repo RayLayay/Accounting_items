@@ -1,11 +1,13 @@
 @echo off
 chcp 65001 >nul
+title 智能记账客户端安装程序
+
 echo ========================================
-echo   智能记账客户端 - 安装脚本
+echo   智能记账客户端 - 安装程序
 echo ========================================
 echo.
 
-:: 检查Python是否安装
+echo [1/4] 检查Python环境...
 python --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo ❌ 未检测到Python，请先安装Python 3.7+
@@ -14,44 +16,44 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-:: 检查pip是否可用
-pip --version >nul 2>&1
+echo ✅ Python环境正常
+
+echo.
+echo [2/4] 检查Flask依赖...
+python -c "import flask" >nul 2>&1
 if %errorlevel% neq 0 (
-    echo ❌ pip不可用，请检查Python安装
+    echo ⚠️ 正在安装Flask依赖...
+    pip install flask
+    if %errorlevel% neq 0 (
+        echo ❌ Flask安装失败，请手动运行: pip install flask
+        pause
+        exit /b 1
+    )
+    echo ✅ Flask安装成功
+) else (
+    echo ✅ Flask依赖已安装
+)
+
+echo.
+echo [3/4] 检查数据库文件...
+if not exist "finance_system.db" (
+    echo ❌ 数据库文件不存在，请确保所有文件完整
     pause
     exit /b 1
 )
-
-echo ✅ 环境检查通过
-echo.
-
-:: 安装依赖
-echo 正在安装依赖...
-pip install flask requests >nul 2>&1
-if %errorlevel% neq 0 (
-    echo ❌ 依赖安装失败
-    pause
-    exit /b 1
-)
-echo ✅ 依赖安装成功
-
-:: 创建桌面快捷方式（可选）
-set /p create_shortcut="是否创建桌面快捷方式? (y/n): "
-if /i "%create_shortcut%"=="y" (
-    echo 创建桌面快捷方式...
-    copy "智能记账客户端.exe" "%userprofile%\Desktop\智能记账客户端.exe" >nul 2>&1
-    echo ✅ 快捷方式创建成功
-)
+echo ✅ 数据库文件正常
 
 echo.
-echo ========================================
-echo   安装完成！
+echo [4/4] 启动智能记账客户端...
+echo.
+echo 🚀 正在启动客户端...
+echo 📊 访问地址: http://127.0.0.1:5000
+echo 👤 测试账号: testuser / test123
+echo.
+echo 按 Ctrl+C 停止服务
 echo ========================================
 echo.
-echo 使用方法：
-echo 1. 双击运行"智能记账客户端.exe"
-echo 2. 系统会自动打开浏览器访问应用
-echo 3. 使用测试账号: testuser / test123
-echo.
-echo 按任意键退出...
-pause >nul
+
+python start_client.py
+
+pause

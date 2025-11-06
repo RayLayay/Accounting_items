@@ -179,9 +179,18 @@
             background: #28a745;
             color: white;
         }
-        
+
         .btn-success:hover {
             background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
         }
         
         .chart-container {
@@ -453,12 +462,20 @@
             
             if (reportType === 'monthly') {
                 const month = document.getElementById('report-month').value;
+                if (!month) {
+                    resultDiv.innerHTML = '<div class="error">请选择月份</div>';
+                    return;
+                }
                 const [year, monthNum] = month.split('-');
-                url = '/api/reports/monthly';
+                url = '/api/web/reports/monthly';
                 data = { year: parseInt(year), month: parseInt(monthNum) };
             } else {
                 const year = parseInt(document.getElementById('report-year').value);
-                url = '/api/reports/yearly';
+                if (!year) {
+                    resultDiv.innerHTML = '<div class="error">请选择年份</div>';
+                    return;
+                }
+                url = '/api/web/reports/yearly';
                 data = { year: year };
             }
             
@@ -487,7 +504,7 @@
             const loading = document.getElementById('reports-loading');
             const list = document.getElementById('reports-list');
             
-            fetch('/api/reports')
+            fetch('/api/web/reports')
                 .then(response => response.json())
                 .then(reports => {
                     loading.style.display = 'none';
@@ -499,19 +516,22 @@
                         return;
                     }
                     
-                    reports.forEach(report => {
-                        const card = document.createElement('div');
-                        card.className = 'report-card';
-                        card.innerHTML = `
-                            <div class="report-title">${report.title}</div>
-                            <div class="report-meta">
-                                <span class="report-type ${report.report_type}">${report.report_type === 'monthly' ? '月度' : '年度'}</span>
-                                <span>生成时间: ${new Date(report.generated_at).toLocaleString()}</span>
-                            </div>
-                            <button class="btn btn-primary" onclick="viewReport(${report.id})">查看详情</button>
-                        `;
-                        list.appendChild(card);
-                    });
+                        reports.forEach(report => {
+                            const card = document.createElement('div');
+                            card.className = 'report-card';
+                            card.innerHTML = `
+                                <div class="report-title">${report.title}</div>
+                                <div class="report-meta">
+                                    <span class="report-type ${report.report_type}">${report.report_type === 'monthly' ? '月度' : '年度'}</span>
+                                    <span>生成时间: ${new Date(report.generated_at).toLocaleString()}</span>
+                                </div>
+                                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                    <button class="btn btn-primary" onclick="viewReport(${report.id})">查看详情</button>
+                                    <button class="btn btn-danger" onclick="deleteReport(${report.id}, '${report.title}')">删除</button>
+                                </div>
+                            `;
+                            list.appendChild(card);
+                        });
                 })
                 .catch(error => {
                     loading.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
@@ -519,7 +539,7 @@
         }
         
         function viewReport(reportId) {
-            fetch(`/api/reports/${reportId}`)
+            fetch(`/api/web/reports/${reportId}`)
                 .then(response => response.json())
                 .then(content => {
                     currentReport = content;
@@ -733,8 +753,8 @@
             resultDiv.innerHTML = '<div class="loading">正在分析数据...</div>';
             
             const url = analysisType === 'time-range' ? 
-                `/api/analysis/time-range?start_date=${startDate}&end_date=${endDate}` :
-                `/api/analysis/category?start_date=${startDate}&end_date=${endDate}`;
+                `/api/web/analysis/time-range?start_date=${startDate}&end_date=${endDate}` :
+                `/api/web/analysis/category?start_date=${startDate}&end_date=${endDate}`;
             
             fetch(url)
                 .then(response => response.json())
@@ -1011,6 +1031,28 @@
             };
             
             chart.setOption(option);
+        }
+
+        function deleteReport(reportId, reportTitle) {
+            if (!confirm(`确定要删除报告 "${reportTitle}" 吗？此操作不可撤销。`)) {
+                return;
+            }
+            
+            fetch(`/api/web/reports/${reportId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert(result.message);
+                    loadReports(); // 刷新报告列表
+                } else {
+                    alert('删除失败: ' + result.message);
+                }
+            })
+            .catch(error => {
+                alert('删除报告失败: ' + error.message);
+            });
         }
     </script>
 </body>
